@@ -260,4 +260,13 @@ eeprom_read:		; -> outputs to r16
 .message "Processing: main.asm"
 
 loop:
+	.ifdef IRQ
+		rcall init_interrupts
+	.endif
+	.ifdef UART
+		rcall init_uart
+	.endif
+	.ifdef SPI
+		rcall init_spi
+	.endif
 	rjmp loop
