@@ -13,6 +13,14 @@ strings_compare:	; puts 0 in r16 if strings are equal
 	cp r18, r20
 ; if lengths aren't equal we just 'return' 1, who gives a fuck then
 	brne strings_compare_end_non_eq
+	st z, r17
+strings_compare_internal:
+	
+	breq strings_compare_internal
+
+strings_compare_end_eq:
+	ldi r16, 0
+	rjmp strings_compare_end
 strings_compare_end_non_eq:
 	ldi r16, 1
 strings_compare_end:
