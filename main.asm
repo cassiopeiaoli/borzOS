@@ -13,6 +13,8 @@
 .org 0x0000
 rjmp loop
 
+; ====== INCLUDING MODULES ======
+
 .ifdef IRQ
 
 .org 0x0001			; INT0
@@ -138,12 +140,9 @@ init_interrupts:
 
 ; Define jumps to ISRs
 
-
 .endif
 
 
-
-; ====== INCLUDING MODULES ======
 
 .ifdef UART
 ; Init UART
@@ -201,7 +200,7 @@ putstring:
 	cpi r17, 0			; check if the character is null	
 	breq putstring_end
 putstring_wait:
-	lds r17, UCSR0A
+	; lds r17, UCSR0A
 putstring_end:
 	ret
 
@@ -235,6 +234,31 @@ spi_transmit_loop:
 	sbrs r16, USIOIF
 	rjmp spi_transmit_loop
 	in r16, USIDR
+	ret
+.endif
+
+.ifdef EEPROM
+
+; r16 - Content to put at a given EEPROM address
+; r17 - EEPROM address to write to
+eeprom_write:
+	sbic EECR, EEPE
+	rjmp eeprom_write
+	; Set Programming mode
+	load_out [r16, (1 << EEPM1), EECR]
+	out EEAR, r17
+	out EEDR, r19
+	sbi EECR, EEMPE
+	sbi EECR, EEPE
+	ret
+
+; r17 - EEPROM Address to read
+eeprom_read:		; outputs to r16 
+	sbic EECR, EEPE
+	rjmp EEPROM_read
+	out EEAR, r17
+	sbi EECR, EERE
+	in r16, EEDR
 	ret
 .endif
 

@@ -1,5 +1,5 @@
 all:
-	avra main.asm -o borzos
+	avra main.asm --define EEPROM --define UART --define IRQ --define SPI -o borzos
 
 uart:
 	avra main.asm --define UART -o borzos
