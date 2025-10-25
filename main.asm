@@ -1,8 +1,5 @@
 .INCLUDE	"tn2313Adef.inc"
 
-.cseg
-.org 0x0000
-
 .macro load_out
 	.message "no parameters"
 .endm
@@ -12,7 +9,139 @@
 	out @2, @0
 .endm
 
+.cseg
+.org 0x0000
 rjmp loop
+
+.ifdef IRQ
+
+.org 0x0001			; INT0
+rjmp INT0_ISR
+.org 0x0002			; INT1
+rjmp INT1_ISR
+.org 0x0003			; TIM1_CAPT
+rjmp TIM1_CAPT_ISR
+.org 0x0004			; TIM1_COMPA 
+rjmp TIM1_COMPA_ISR
+.org 0x0005			; TIM1_OVF 
+rjmp TIM1_OVF_ISR
+.org 0x0006			; TIM0_OVF
+rjmp TIM0_OVF_ISR
+.org 0x0007			; USART0_RX
+rjmp USART0_RX_ISR
+.org 0x0008			; USART0_UDRE 
+rjmp USART0_UDRE_ISR
+.org 0x0009			; USART0_TX 
+rjmp USART0_TX_ISR
+.org 0x000A			; ANALOG_COMP 
+rjmp ANALOG_COMP_ISR
+.org 0x000B			; PCINT0
+rjmp PCINT0_ISR
+.org 0x000C			; TIM1_COMPB
+rjmp TIM1_COMPB_ISR
+.org 0x000D			; TIM0_COMPA
+rjmp TIM0_COMPA_ISR
+.org 0x000E			; TIM0_COMPB
+rjmp TIM0_COMPB_ISR
+.org 0x000F			; USI_START 
+rjmp USI_START_ISR
+.org 0x0010			; USI_OVF
+rjmp USI_OVF_ISR
+.org 0x0011			; EE_READY 
+rjmp EE_READY_ISR
+.org 0x0012			; WDT_OVF
+rjmp WDT_OVF_ISR
+.org 0x0013			; PCINT1
+rjmp PCINT1_ISR
+.org 0x0014			; PCINT2
+rjmp PCINT2_ISR
+
+INT0_ISR:
+	reti
+INT1_ISR:
+	reti
+TIM1_CAPT_ISR:
+	reti
+TIM1_COMPA_ISR:
+	reti
+TIM1_OVF_ISR:
+	reti
+TIM0_OVF_ISR:
+	reti
+USART0_RX_ISR:
+	reti
+USART0_UDRE_ISR:
+	reti
+USART0_TX_ISR:
+	reti
+ANALOG_COMP_ISR:
+	reti
+PCINT0_ISR:
+	reti
+TIM1_COMPB_ISR:
+	reti
+TIM0_COMPA_ISR:
+	reti
+TIM0_COMPB_ISR:
+	reti
+USI_START_ISR:
+	reti
+USI_OVF_ISR:
+	reti
+EE_READY_ISR:
+	reti
+WDT_OVF_ISR:
+	reti
+PCINT1_ISR:
+	reti
+PCINT2_ISR:
+	reti
+
+init_interrupts:
+	; Set up INT0 and INT1 interrupts based on defined symbols
+	load_out [r16, (1 << INT1) | (1 << INT0), GIMSK]	
+	mov r18, r16
+	.ifdef INT0_LL
+	ldi r16, (0 << ISC01) | (0 << ISC00)
+	.endif
+	.ifdef INT0_LC
+	ldi r16, (0 << ISC01) | (1 << ISC00)
+	.endif
+	.ifdef INT0_FE
+	ldi r16, (1 << ISC01) | (0 << ISC00)
+	.endif
+	.ifdef INT0_RE
+	ldi r16, (1 << ISC01) | (1 << ISC00)
+	.endif
+	.ifdef INT1_LL
+	ldi r17, (0 << ISC11) | (0 << ISC10)
+	.endif
+	.ifdef INT1_LC
+	ldi r17, (0 << ISC11) | (1 << ISC10)
+	.endif
+	.ifdef INT1_FE
+	ldi r17, (1 << ISC11) | (0 << ISC10)
+	.endif
+	.ifdef INT1_RE
+	ldi r17, (1 << ISC11) | (1 << ISC10)
+	.endif
+	or r16, r17
+	out MCUCR, r16
+
+	;Set up PCINT0, PCINT1 and PCINT2 interrupts
+	ldi r17, (1 << 5) | (1 << 4) | (1 << 3)
+	or r18, r17
+	out GIMSK, r18 
+	
+	sei
+	ret
+
+; Define jumps to ISRs
+
+
+.endif
+
+
 
 ; ====== INCLUDING MODULES ======
 
@@ -65,7 +194,6 @@ uart_receive:
 	rjmp uart_receive
 	in r16, UDR
 	ret
-.endif
 
 ; TODO: implement this shit
 putstring:
@@ -76,6 +204,8 @@ putstring_wait:
 	lds r17, UCSR0A
 putstring_end:
 	ret
+
+.endif
 
 .ifdef SPI
 
@@ -105,42 +235,6 @@ spi_transmit_loop:
 	sbrs r16, USIOIF
 	rjmp spi_transmit_loop
 	in r16, USIDR
-	ret
-.endif
-
-.ifdef IRQ
-
-init_interrupts:
-	; Set up INT0 and INT1 interrupts based on defined symbols
-	ldi r16, 0
-	.ifdef INT0_LL
-	ldi r16, (0 << ISC01) | (0 << ISC00)
-	.endif
-	.ifdef INT0_LC
-	ldi r16, (0 << ISC01) | (1 << ISC00)
-	.endif
-	.ifdef INT0_FE
-	ldi r16, (1 << ISC01) | (0 << ISC00)
-	.endif
-	.ifdef INT0_RE
-	ldi r16, (1 << ISC01) | (1 << ISC00)
-	.endif
-	.ifdef INT1_LL
-	ldi r17, (0 << ISC11) | (0 << ISC10)
-	.endif
-	.ifdef INT1_LC
-	ldi r17, (0 << ISC11) | (1 << ISC10)
-	.endif
-	.ifdef INT1_FE
-	ldi r17, (1 << ISC11) | (0 << ISC10)
-	.endif
-	.ifdef INT1_RE
-	ldi r17, (1 << ISC11) | (1 << ISC10)
-	.endif
-	or r16, r17
-	out MCUCR, r16
-	
-	sei
 	ret
 .endif
 
