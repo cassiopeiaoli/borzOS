@@ -11,7 +11,8 @@
 
 .cseg
 .org 0x0000
-rjmp loop
+rjmp init 
+
 
 ; ====== INCLUDING MODULES ======
 
@@ -140,6 +141,8 @@ init_interrupts:
 
 .endif
 
+.INCLUDE "strings.asm"
+
 .ifdef UART
 .equ		UART_BAUDRATE		= 9600	
 .equ		BAUD_PRESCALE		= (8000000/16/UART_BAUDRATE) - 1
@@ -259,6 +262,7 @@ eeprom_read:		; -> outputs to r16
 
 .message "Processing: main.asm"
 
+init:
 loop:
 	.ifdef IRQ
 		rcall init_interrupts
