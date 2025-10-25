@@ -138,14 +138,9 @@ init_interrupts:
 	sei
 	ret
 
-; Define jumps to ISRs
-
 .endif
 
-
-
 .ifdef UART
-; Init UART
 .equ		UART_BAUDRATE		= 9600	
 .equ		BAUD_PRESCALE		= (8000000/16/UART_BAUDRATE) - 1
 
@@ -253,7 +248,7 @@ eeprom_write:
 	ret
 
 ; r17 - EEPROM Address to read
-eeprom_read:		; outputs to r16 
+eeprom_read:		; -> outputs to r16 
 	sbic EECR, EEPE
 	rjmp EEPROM_read
 	out EEAR, r17
